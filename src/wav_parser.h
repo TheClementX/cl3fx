@@ -1,14 +1,7 @@
 #ifndef PARSER
 #define PARSER
 
-#include <cstdint>
-#include <string>
-#include <iostream>
-#include <fstream>
-#include <vector>
-#include <complex>
-#include <cstring>
-
+#include "utils.h"
 
 /**@brief a simple template function to read an arbitrary size
  * integer from a byte vector
