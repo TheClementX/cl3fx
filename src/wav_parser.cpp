@@ -10,7 +10,7 @@ bool verify_tag(const std::vector<uint8_t>& buff, size_t offset, const std::stri
 	return std::equal(ref.begin(), ref.end(), buff.begin() + offset); 
 }
 
-int WavParser::parse_file(const std::string& file) {
+int WavParser::read_file(const std::string& file) {
 	this->file = file; 
 
 	//process wave file
@@ -20,6 +20,10 @@ int WavParser::parse_file(const std::string& file) {
 
 	//return success
 	return 0; 
+}
+
+int WavParser::write_file(std::string& name, const std::vector<double> data) {
+	
 }
 
 int WavParser::read_wav(const std::string& file) {

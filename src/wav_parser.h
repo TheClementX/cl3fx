@@ -65,7 +65,9 @@ public:
 	 * @param[in] file : the file to be parssed 
 	 * @return 0 on success -1 on failure
 	 */
-	int parse_file(const std::string& file); 
+	int read_file(const std::string& file); 
+
+	int write_file(std::string& name, const std::vector<double> data); 
 
 private:
 	/**@brief the file path for the currently parsed file

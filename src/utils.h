@@ -11,7 +11,8 @@
 #include <complex>
 #include <cassert>
 #include <cstdio>
-
+#include <bit>
+#include <algorithm>
 
 #ifdef DEBUG
 	#define dbg_requires(...) assert(__VA_ARGS__)

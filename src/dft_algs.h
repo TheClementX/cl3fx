@@ -17,7 +17,7 @@ public:
 	 * @pre
 	 * @post
 	 */
-	int dft(std::vector<double>& signal); 
+	z_vector dft(r_vector& signal); 
 
 	/**@brief
 	 * @param[in]
@@ -25,7 +25,7 @@ public:
 	 * @pre
 	 * @post
 	 */
-	int idft(std::vector<double>& signal); 
+	r_vector idft(z_vector& signal); 
 
 	/**@brief
 	 * @param[in]
@@ -33,7 +33,7 @@ public:
 	 * @pre
 	 * @post
 	 */
-	int flip(std::vector<double>& signal); 
+	int flip(r_vector& signal); 
 
 	/**@brief
 	 * @param[in]
@@ -41,7 +41,7 @@ public:
 	 * @pre
 	 * @post
 	 */
-	int shift(std::vector<double>& signal, int delta); 
+	int shift(r_vector& signal, int delta); 
 
 	/**@brief
 	 * @param[in]
@@ -49,7 +49,7 @@ public:
 	 * @pre
 	 * @post
 	 */
-	int convolute_circ(std::vector<double>& s1, std::vector<double>& sig2); 
+	r_vector convolute_circ(r_vector& s1, r_vector& s2); 
 
 	/**@brief
 	 * @param[in]
@@ -57,7 +57,7 @@ public:
 	 * @pre
 	 * @post
 	 */
-	int stretch(std::vector<double>& signal, int L); 
+	r_vector correlate(r_vector& s1, r_vector& s2); 
 
 	/**@brief
 	 * @param[in]
@@ -65,7 +65,7 @@ public:
 	 * @pre
 	 * @post
 	 */
-	int zeropad(std::vector<double>& signal); 
+	int stretch(r_vector& signal, int L); 
 
 	/**@brief
 	 * @param[in]
@@ -73,7 +73,7 @@ public:
 	 * @pre
 	 * @post
 	 */
-	int interpolate(std::vector<double>& signal); 
+	int periodic_zeropad(r_vector& signal, int L); 
 
 	/**@brief
 	 * @param[in]
@@ -81,7 +81,7 @@ public:
 	 * @pre
 	 * @post
 	 */
-	int repeat(std::vector<double>& signal, int L); 
+	int causal_zeropad(r_vector& signal, int L); 
 
 	/**@brief
 	 * @param[in]
@@ -89,7 +89,15 @@ public:
 	 * @pre
 	 * @post
 	 */
-	int downsample(std::vector<double>& signal, int L); 
+	int repeat(r_vector& signal, int L); 
+
+	/**@brief
+	 * @param[in]
+	 * @return
+	 * @pre
+	 * @post
+	 */
+	r_vector downsample(r_vector& signal, int L); 
 	
 	/**@brief
 	 * @param[in]
@@ -97,18 +105,21 @@ public:
 	 * @pre
 	 * @post
 	 */
-	int alias(std::vector<double>& signal, int L); 
+	r_vector alias(r_vector& signal, int L); 
+
+	//implement after learning filters
+	//periodic interpolation
+	int p_interpolation(r_vector& signal, int L); 
+
+	//non periodic interpolation
+	int np_interpolation(r_vector& signal, int L); 
 
 private:
 	const double PI = 3.141592653589793238460; 
 
-	/**@brief
-	 * @param[in]
-	 * @return
-	 * @pre
-	 * @post
-	 */
-	std::vector<std::complex<double>> r_to_z(std::vector<double> r); 
+	bool is_p2(int n); 
+
+	int next_p2(int n); 
 
 	/**@brief
 	 * @param[in]
@@ -116,12 +127,47 @@ private:
 	 * @pre
 	 * @post
 	 */
-	std::vector<double> z_to_r(std::vecotr<std::complex<double>> z); 
+	z_vector r_to_z(r_vector& r); 
 
-	std::vector<std::complex<double>> h_dft(std::vector<std::complex<double>> sig); 
+	/**@brief
+	 * @param[in]
+	 * @return
+	 * @pre
+	 * @post
+	 */
+	r_vector z_to_r(z_vector& z); 
 
-	std::vector<std::complex<double>> h_idft(std::vector<std::complex<double>> sig); 
+	/**@brief
+	 * @param[in]
+	 * @return
+	 * @pre
+	 * @post
+	 */
+	z_vector even(z_vector& sig); 
 
+	/**@brief
+	 * @param[in]
+	 * @return
+	 * @pre
+	 * @post
+	 */
+	z_vector odd(z_vector& sig); 
+
+	/**@brief
+	 * @param[in]
+	 * @return
+	 * @pre
+	 * @post
+	 */
+	z_vector h_dft(z_vector sig); 
+
+	/**@brief
+	 * @param[in]
+	 * @return
+	 * @pre
+	 * @post
+	 */
+	z_vector h_idft(z_vector sig); 
 }; 
 
 #endif 
