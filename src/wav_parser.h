@@ -65,9 +65,15 @@ public:
 	 * @param[in] file : the file to be parssed 
 	 * @return 0 on success -1 on failure
 	 */
-	int read_file(const std::string& file); 
+	channel_v read_file(const std::string& file); 
 
-	int write_file(std::string& name, const std::vector<double> data); 
+	/**@brief a function that writes IEEE32 float wav files 
+	 * @param[in] name : the file name
+	 * @param[in] data : the array of channels to be written
+	 * @param[in] sample_rate : the sample rate
+	 * @return 0 on success -1 on failure
+	 */
+	int write_file(std::string& name, const channel_v& data, uint32_t sample_rate); 
 
 private:
 	/**@brief the file path for the currently parsed file
@@ -79,10 +85,11 @@ private:
 	 */
 	std::vector<uint8_t> raw_data; 
 
-	/**@brief contains the signal from the wav file normalized
+	/**@brief contains the channels arrays from the wav file normalized
 	 * between -1 and 1 as double precision floating point values. 
+	 * Each signal is stored as its own vector
 	 */
-	std::vector<std::vector<double>> norm_channels;  
+	channel_v norm_channels;  
 
 	/**@brief meta_data struct for the wav_file
 	 */
@@ -113,6 +120,8 @@ private:
 	 * @pre read_wav has been called 
 	 */
 	int normalize_data(); 
+
+	std::vector<float> interleave_channels(const channel_v& c); 
 }; 
 
 #endif

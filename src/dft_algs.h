@@ -3,9 +3,6 @@
 
 #include "utils.h"
 
-using complex = std::complex<double>
-using r_vector = std::vector<double>; 
-using z_vector = std::vector<complex>; 
 
 class DFT {
 public:
@@ -107,13 +104,14 @@ public:
 	 */
 	r_vector alias(r_vector& signal, int L); 
 
-	//implement after learning filters
-	//periodic interpolation
+	/*
+	implement after learning filters
+	periodic interpolation
 	int p_interpolation(r_vector& signal, int L); 
 
-	//non periodic interpolation
+	non periodic interpolation
 	int np_interpolation(r_vector& signal, int L); 
-
+	*/
 private:
 	const double PI = 3.141592653589793238460; 
 

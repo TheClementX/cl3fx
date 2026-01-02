@@ -37,11 +37,14 @@ int DFT::flip(r_vector& signal) {
 int DFT::shift(r_vector& signal, int delta) {
 	int left_delta = signal.size() - delta; 
 	std::rotate(signal.begin(), signal.begin() + left_delta, signal.end()); 
+
+	return 0; 
 }
 
-int DFT::convolute_circ(r_vector& s1, r_vector& s2) {
+r_vector DFT::convolute_circ(r_vector& s1, r_vector& s2) {
 	//assert signals are same length
-	if(s1.size() != s2.size()) return -1; 
+	//return -1.0 signal on error
+	if(s1.size() != s2.size()) return r_vector{-1.0}; 
 
 	//use convolution theorem
 	z_vector X = this->dft(s1); 
@@ -50,15 +53,16 @@ int DFT::convolute_circ(r_vector& s1, r_vector& s2) {
 	z_vector z_result; 
 	z_result.resize(s1.size()); 
 
-	for(int i = 0; i < z_result.size(); ++i)
+	for(size_t i = 0; i < z_result.size(); ++i)
 		z_result[i] = X[i] * Y[i]; 
 
 	return this->idft(z_result); 
 }
 
-r_vector correlate(r_vector& s1, r_vector& s2) {
-	//assert signals are same length
-	if(s1.size() != s2.size()) return -1; 
+r_vector DFT::correlate(r_vector& s1, r_vector& s2) {
+	//assert signals are same length 
+	//return -1.0 signal on error
+	if(s1.size() != s2.size()) return r_vector{-1.0}; 
 
 	//use correlate theorem
 	z_vector X = this->dft(s1); 
@@ -67,7 +71,7 @@ r_vector correlate(r_vector& s1, r_vector& s2) {
 	z_vector z_result; 
 	z_result.resize(s1.size()); 
 
-	for(int i = 0; i < z_result.size(); ++i)
+	for(size_t i = 0; i < z_result.size(); ++i)
 		z_result[i] = std::conj(X[i]) * Y[i]; 
 
 	return this->idft(z_result); 
@@ -79,13 +83,13 @@ int DFT::stretch(r_vector& signal, int L) {
 		signal.insert(signal.begin() + i + 1, zeros, 0.0); 
 	}
 	
-	return 0.0; 
+	return 0; 
 }
 
 //assumes signal is stored in circular form 
 //with positive time from 0 to N/2 + 1
 int DFT::periodic_zeropad(r_vector& signal, int L) {
-	if(L <= signal.size()) return 0;
+	if(static_cast<size_t>(L) <= signal.size()) return 0;
 	int zeros = signal.size() - L;
 	int ipos = signal.size() / 2 + 1; 
 
@@ -95,14 +99,14 @@ int DFT::periodic_zeropad(r_vector& signal, int L) {
 }
 
 int DFT::causal_zeropad(r_vector& signal, int L) {
-	if(L <= signal.size()) return 0; 
+	if(static_cast<size_t>(L) <= signal.size()) return 0; 
 	
 	int left = L - signal.size(); 
 	for(int i = 0; i < left; ++i) {
 		signal.push_back(0.0); 
 	}
 
-	return 0
+	return 0;
 }
 
 int DFT::repeat(r_vector& signal, int L) {
@@ -115,7 +119,9 @@ int DFT::repeat(r_vector& signal, int L) {
 
 r_vector DFT::downsample(r_vector& signal, int L) {
 	r_vector result; 
-	for(int i = 0; i < signal.size(); ++i) {
+	int size = static_cast<int>(signal.size()); 
+
+	for(int i = 0; i < size; ++i) {
 		if(i % L == 0)	
 			result.push_back(signal[i]); 
 	}
@@ -148,40 +154,40 @@ r_vector DFT::alias(r_vector& signal, int L) {
 
 	return result; 
 }
-
-int DFT::periodic_interpolation(r_vector& signal, int L) {
-
-	return 0; 
-}
-
-//causal zeropadding
-int DFT::nonperiodic_interpolation(r_vector& signal, int L) {
+/*
+int DFT::p_interpolation(r_vector& signal, int L) {
 
 	return 0; 
 }
 
-bool is_p2(int n) {
+//causal zeropadding in formula
+int DFT::np_interpolation(r_vector& signal, int L) {
+
+	return 0; 
+}
+*/
+bool DFT::is_p2(int n) {
 	return (n > 0) && ((n-1) & n) == 0; 
 }
 
-int next_p2(int n) {
-	int logb2 = std::bit_width(n); 
+int DFT::next_p2(int n) {
+	int logb2 = std::bit_width(static_cast<unsigned int>(n)); 
 	return 1 << logb2; 
 }
 
-z_vector DFT::r_to_z(r_vector r) {
+z_vector DFT::r_to_z(r_vector& r) {
 	z_vector result; 
-	for(int i = 0; i < r.size(); ++i) {
+	for(size_t i = 0; i < r.size(); ++i) {
 		result.push_back(std::complex<double>(r[i], 0.0)); 
 	}
 
 	return result; 
 }
 
-r_vector DFT::z_to_r(z_vector z) {
+r_vector DFT::z_to_r(z_vector& z) {
 	r_vector result; 
-	for(int i = 0; i < z.size(); ++i) {
-		result.push_back(z.real()); 
+	for(size_t i = 0; i < z.size(); ++i) {
+		result.push_back(z[i].real()); 
 	}
 
 	return result;
@@ -189,7 +195,8 @@ r_vector DFT::z_to_r(z_vector z) {
 
 z_vector DFT::even(z_vector& sig) {
 	z_vector result; 
-	for(int i = 0; i < sig.size(); ++i) {
+	int size = static_cast<int>(sig.size()); 
+	for(int i = 0; i < size; ++i) {
 		if((i % 2) == 0) 
 			result.push_back(sig[i]); 
 	}
@@ -199,7 +206,8 @@ z_vector DFT::even(z_vector& sig) {
 
 z_vector DFT::odd(z_vector& sig) {
 	z_vector result; 
-	for(int i = 0; i < sig.size(); ++i) {
+	int size = static_cast<int>(sig.size()); 
+	for(int i = 0; i < size; ++i) {
 		if((i % 2) != 0) 
 			result.push_back(sig[i]); 
 	}
@@ -208,9 +216,9 @@ z_vector DFT::odd(z_vector& sig) {
 }
 
 z_vector DFT::h_dft(z_vector sig) {
-	const size_t size = sig.size(); 
+	int N = static_cast<int>(sig.size()); 
 	//base case
-	if(size <= 1) return sig; 
+	if(N <= 1) return sig; 
 	
 	//split
 	z_vector even = this->even(sig); //even split
@@ -222,8 +230,8 @@ z_vector DFT::h_dft(z_vector sig) {
 
 	z_vector result; 
 	//calculate sum for the step 
-	for(int k = 0; k < size; ++k) {
-		complex t = std::polar(1.0, 2.0 * this->PI * k / size) * odft[k]; 
+	for(int k = 0; k < N; ++k) {
+		complex t = std::polar(1.0, 2.0 * this->PI * k / N) * odft[k]; 
 		result[k] = edft[k] + t; 
 		result[k + (N/2)] = edft[k] - t; 
 	}
@@ -234,12 +242,12 @@ z_vector DFT::h_dft(z_vector sig) {
 z_vector DFT::h_idft(z_vector sig) {
 	z_vector result; 
 
-	for(int i = 0; i < sig.size(); ++i) 
+	for(size_t i = 0; i < sig.size(); ++i) 
 		result.push_back(std::conj(sig[i])); 
 
 	result = this->h_dft(result); 
 
-	for(int i = 0; i < result.size(); ++i) 
+	for(size_t i = 0; i < result.size(); ++i) 
 		result[i] = std::conj(result[i]); 
 
 	return result; 

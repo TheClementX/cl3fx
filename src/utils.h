@@ -26,4 +26,9 @@
 	#define dbg_printf(...)
 #endif
 
+using complex = std::complex<double>; 
+using r_vector = std::vector<double>; 
+using z_vector = std::vector<complex>; 
+using channel_v = std::vector<r_vector>; 
+
 #endif

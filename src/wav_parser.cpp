@@ -10,20 +10,66 @@ bool verify_tag(const std::vector<uint8_t>& buff, size_t offset, const std::stri
 	return std::equal(ref.begin(), ref.end(), buff.begin() + offset); 
 }
 
-int WavParser::read_file(const std::string& file) {
+channel_v WavParser::read_file(const std::string& file) {
 	this->file = file; 
 
 	//process wave file
-	if(this->read_wav(file) < 0) return -1; 
-	if(this->parse_wav() < 0) return -1;
-	if(this->normalize_data() < 0) return -1; 
+	this->read_wav(file);
+	this->parse_wav(); 
+	this->normalize_data(); 
 
 	//return success
-	return 0; 
+	return this->norm_channels; 
 }
 
-int WavParser::write_file(std::string& name, const std::vector<double> data) {
-	
+int WavParser::write_file(
+	std::string& name, 
+	const channel_v& data, 
+	uint32_t sample_rate
+) {
+	std::ofstream outfile(name + ".wav", std::ios::binary); 
+	if(!outfile) {
+		return -1; 
+	}
+	std::vector<float> to_write = this->interleave_channels(data); 
+
+	//riff header
+	outfile << "RIFF"; 
+	//file size
+	uint32_t dsize = to_write.size() * 4; 
+	uint32_t fsize = 44 + dsize; 
+	outfile.write(reinterpret_cast<const char*>(&fsize), sizeof(fsize)); 
+	//wave header
+	outfile << "WAVE"; 
+	//fmt header
+	outfile << "fmt "; 
+	//fmt size
+	uint32_t fmt_size = 16; 
+	outfile.write(reinterpret_cast<const char*>(&fmt_size), sizeof(fmt_size)); 
+	//fmt type IEEE float 32
+	uint16_t type = 3; 
+	outfile.write(reinterpret_cast<const char*>(&type), sizeof(type)); 
+	//number of channels
+	uint16_t num_chan = data.size(); 
+	outfile.write(reinterpret_cast<const char*>(&num_chan), sizeof(num_chan)); 
+	//sample rate
+	outfile.write(reinterpret_cast<const char*>(&sample_rate), sizeof(sample_rate)); 
+
+	//bit rate fields
+	uint16_t bits_per_sample = 32; 
+	uint16_t block_align = num_chan * bits_per_sample / 8; 
+	uint32_t byte_rate = sample_rate * bits_per_sample * num_chan / 8; 
+
+	outfile.write(reinterpret_cast<const char*>(&byte_rate), sizeof(byte_rate)); 
+	outfile.write(reinterpret_cast<const char*>(&block_align), sizeof(block_align)); 
+	outfile.write(reinterpret_cast<const char*>(&bits_per_sample), sizeof(bits_per_sample)); 
+
+	//write data size
+	outfile.write(reinterpret_cast<const char*>(&dsize), sizeof(dsize)); 
+	//write data
+	outfile.write(reinterpret_cast<const char*>(to_write.data()), to_write.size() * sizeof(float)); 
+
+	return 0; 
 }
 
 int WavParser::read_wav(const std::string& file) {
@@ -155,7 +201,7 @@ int WavParser::normalize_data() {
 	}
 
 	//init channels
-	this->norm_channels = std::vector<std::vector<double>>(num_channels); 
+	this->norm_channels = channel_v(num_channels); 
 
 	uint16_t byte_depth = bit_depth / 8; 
 	uint16_t frame_size = num_channels * byte_depth; 
@@ -175,4 +221,19 @@ int WavParser::normalize_data() {
 	}
 	//success
 	return 0; 
+}
+
+std::vector<float> WavParser::interleave_channels(const channel_v& c) {
+	int num_chan = c.size(); 
+	int chan_len = c[0].size(); 
+	int i_len = num_chan * chan_len; 
+
+	std::vector<float> result(i_len); 
+
+	for(int i = 0; i < chan_len; ++i) {
+		for(int j = 0; j < num_chan; ++j)
+			result.push_back(static_cast<float>(c[j][i])); 
+	}
+
+	return result; 
 }
