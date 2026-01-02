@@ -14,9 +14,15 @@ channel_v WavParser::read_file(const std::string& file) {
 	this->file = file; 
 
 	//process wave file
-	this->read_wav(file);
-	this->parse_wav(); 
-	this->normalize_data(); 
+	if(-1 == this->read_wav(file)) {
+		dbg_printf("read_wav failed in WavParser::read_file"); 
+	}
+	if(-1 == this->parse_wav()) {
+		dbg_printf("parse_wav failed in WavParser::read_file"); 
+	}
+	if(-1 == this->normalize_data()) {
+		dbg_printf("normalize_data failed in WavParser::read_file"); 
+	}
 
 	//return success
 	return this->norm_channels; 
@@ -72,6 +78,22 @@ int WavParser::write_file(
 	return 0; 
 }
 
+void WavParser::print_wav() {
+	std::cout << "______________________________________" << std::endl; 
+	std::cout << "file_path : " << this->file << std::endl; 
+	std::cout << "file_size : " << this->meta_data.file_size << std::endl; 
+	std::cout << "fmt_size : " << this->meta_data.fmt_size << std::endl; 
+	std::cout << "audio_fmt : " << this->meta_data.audio_fmt << std::endl; 
+	std::cout << "num_channels : " << this->meta_data.num_channels << std::endl; 
+	std::cout << "sample_rate : " << this->meta_data.sample_rate << std::endl; 
+	std::cout << "byte_rate : " << this->meta_data.byte_rate << std::endl; 
+	std::cout << "block_align : " << this->meta_data.block_align << std::endl; 
+	std::cout << "bits_per_sample : " << this->meta_data.bits_per_sample << std::endl; 
+	std::cout << "data_size : " << this->meta_data.data_size << std::endl; 
+	std::cout << "data_offset : " << this->meta_data.data_offset << std::endl; 
+	std::cout << "______________________________________\n" << std::endl; 
+}
+
 int WavParser::read_wav(const std::string& file) {
 	std::ifstream infile(file, std::ios::binary); 
 	if(!infile) {
@@ -95,6 +117,7 @@ int WavParser::read_wav(const std::string& file) {
 	return 0; 
 }
 
+//must fix parsing error chunk skipping for the fmt section
 int WavParser::parse_wav() {
 //read RIFF chunk Header
 	size_t curpos = 0; 
@@ -108,7 +131,8 @@ int WavParser::parse_wav() {
 	if(!verify_tag(this->raw_data, curpos, "WAVE"))
 		return -1; 
 	curpos += 4; 
-	
+
+	//must seek format chunk
 	//read format chunk 
 	if(!verify_tag(this->raw_data, curpos, "fmt "))
 		return -1; 

@@ -75,6 +75,8 @@ public:
 	 */
 	int write_file(std::string& name, const channel_v& data, uint32_t sample_rate); 
 
+	void print_wav(); 
+
 private:
 	/**@brief the file path for the currently parsed file
 	 */
