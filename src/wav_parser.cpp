@@ -7,6 +7,7 @@ WavParser::WavParser() {
 bool verify_tag(const std::vector<uint8_t>& buff, size_t offset, const std::string& ref) {
 	if(offset + ref.size() > buff.size()) 
 		return false; 
+
 	return std::equal(ref.begin(), ref.end(), buff.begin() + offset); 
 }
 
@@ -15,13 +16,13 @@ channel_v WavParser::read_file(const std::string& file) {
 
 	//process wave file
 	if(-1 == this->read_wav(file)) {
-		dbg_printf("read_wav failed in WavParser::read_file"); 
+		std::cout << "read_wav failed in WavParser::read_file" << std::endl; 
 	}
 	if(-1 == this->parse_wav()) {
-		dbg_printf("parse_wav failed in WavParser::read_file"); 
+		std::cout << "parse_wav failed in WavParser::read_file" << std::endl; 
 	}
 	if(-1 == this->normalize_data()) {
-		dbg_printf("normalize_data failed in WavParser::read_file"); 
+		std::cout << "normalize_data failed in WavParser::read_file" << std::endl; 
 	}
 
 	//return success
@@ -43,7 +44,7 @@ int WavParser::write_file(
 	outfile << "RIFF"; 
 	//file size
 	uint32_t dsize = to_write.size() * 4; 
-	uint32_t fsize = 44 + dsize; 
+	uint32_t fsize = 36 + dsize; 
 	outfile.write(reinterpret_cast<const char*>(&fsize), sizeof(fsize)); 
 	//wave header
 	outfile << "WAVE"; 
@@ -71,6 +72,7 @@ int WavParser::write_file(
 	outfile.write(reinterpret_cast<const char*>(&bits_per_sample), sizeof(bits_per_sample)); 
 
 	//write data size
+	outfile << "data"; 
 	outfile.write(reinterpret_cast<const char*>(&dsize), sizeof(dsize)); 
 	//write data
 	outfile.write(reinterpret_cast<const char*>(to_write.data()), to_write.size() * sizeof(float)); 
@@ -97,6 +99,7 @@ void WavParser::print_wav() {
 int WavParser::read_wav(const std::string& file) {
 	std::ifstream infile(file, std::ios::binary); 
 	if(!infile) {
+		std::cout << "file open failed in read_wav" << std::endl; 
 		return -1; 
 	}
 
@@ -132,10 +135,12 @@ int WavParser::parse_wav() {
 		return -1; 
 	curpos += 4; 
 
-	//must seek format chunk
-	//read format chunk 
-	if(!verify_tag(this->raw_data, curpos, "fmt "))
-		return -1; 
+	//seek fmt_section
+	while(!verify_tag(this->raw_data, curpos, "fmt ")) {
+		curpos += 4; 
+		uint32_t chunk_size = le_read<uint32_t>(this->raw_data, curpos); 
+		curpos += 4 + static_cast<size_t>(chunk_size); 
+	}
 	curpos += 4; 
 
 	this->meta_data.fmt_size = le_read<uint32_t>(this->raw_data, curpos); 
@@ -250,9 +255,8 @@ int WavParser::normalize_data() {
 std::vector<float> WavParser::interleave_channels(const channel_v& c) {
 	int num_chan = c.size(); 
 	int chan_len = c[0].size(); 
-	int i_len = num_chan * chan_len; 
 
-	std::vector<float> result(i_len); 
+	std::vector<float> result; 
 
 	for(int i = 0; i < chan_len; ++i) {
 		for(int j = 0; j < num_chan; ++j)
