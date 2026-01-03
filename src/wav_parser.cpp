@@ -16,13 +16,16 @@ channel_v WavParser::read_file(const std::string& file) {
 
 	//process wave file
 	if(-1 == this->read_wav(file)) {
-		std::cout << "read_wav failed in WavParser::read_file" << std::endl; 
+		//return -1.0 signal
+		return channel_v{{-1.0}}; 
 	}
 	if(-1 == this->parse_wav()) {
-		std::cout << "parse_wav failed in WavParser::read_file" << std::endl; 
+		//return -1.0 signal
+		return channel_v{{-1.0}}; 
 	}
 	if(-1 == this->normalize_data()) {
-		std::cout << "normalize_data failed in WavParser::read_file" << std::endl; 
+		//return -1.0 signal
+		return channel_v{{-1.0}}; 
 	}
 
 	//return success
